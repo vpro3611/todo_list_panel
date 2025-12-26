@@ -299,6 +299,8 @@ func (s *Server) CreateMyTaskHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	defer r.Body.Close()
+
 	idTaskCreate, err := s.taskSvc.CreateNewTask(ctx, userId, inputTask.Title, inputTask.Description)
 	if err != nil {
 		log.Println("Error creating new task: ", err)
