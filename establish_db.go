@@ -2,16 +2,15 @@ package main
 
 import (
 	"context"
-	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
 	"time"
 )
 
 func EstablishDb(ctx context.Context, timeout time.Duration) (*pgxpool.Pool, error) {
-	dsn := os.Getenv("DATABASE_URL")
+	dsn := os.Getenv(DB_URL_KEY)
 	if dsn == "" {
-		return nil, errors.New("DATABASE_URL is not set")
+		return nil, ErrDBisNotSet
 	}
 
 	config, err := pgxpool.ParseConfig(dsn)

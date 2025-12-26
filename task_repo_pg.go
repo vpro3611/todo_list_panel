@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
 )
@@ -42,7 +41,7 @@ func (tr *TaskPgRepository) GetAll(ctx context.Context) ([]Task, error) {
 	}
 
 	if tasks == nil {
-		return nil, errors.New("no tasks found")
+		return nil, ErrNoTasks
 	}
 
 	return tasks, nil
@@ -75,6 +74,10 @@ func (tr *TaskPgRepository) GetById(ctx context.Context, id int) ([]Task, error)
 		return nil, err
 	}
 
+	if tasks == nil {
+		return nil, ErrNoTasks
+	}
+
 	return tasks, nil
 }
 
@@ -102,7 +105,7 @@ func (tr *TaskPgRepository) UpdateTitle(ctx context.Context, newTitle string, id
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return errors.New("no rows affected")
+		return ErrTaskTitleNotUpdated
 	}
 
 	return nil
@@ -115,7 +118,7 @@ func (tr *TaskPgRepository) UpdateDescription(ctx context.Context, newDescriptio
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return errors.New("no rows affected")
+		return ErrTaskDescNotUpdated
 	}
 
 	return nil
@@ -128,7 +131,7 @@ func (tr *TaskPgRepository) SwitchTaskStatus(ctx context.Context, id int) error 
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return errors.New("no rows affected")
+		return ErrTaskStatusNotSwitched
 	}
 
 	return nil

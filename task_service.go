@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 )
 
 type TaskService struct {
@@ -19,7 +18,7 @@ func (ts *TaskService) GetAllTasks(ctx context.Context) ([]Task, error) {
 
 func (ts *TaskService) GetTaskById(ctx context.Context, id int) ([]Task, error) {
 	if id < 1 {
-		return nil, errors.New("id must be greater than 0")
+		return nil, ErrIdMustBeGtZero
 	}
 	tasks, err := ts.repo.GetById(ctx, id)
 	if err != nil {
@@ -27,7 +26,7 @@ func (ts *TaskService) GetTaskById(ctx context.Context, id int) ([]Task, error) 
 	}
 
 	if tasks == nil {
-		return nil, errors.New("no tasks found")
+		return nil, ErrNoTasks
 	}
 
 	return tasks, err
@@ -35,10 +34,10 @@ func (ts *TaskService) GetTaskById(ctx context.Context, id int) ([]Task, error) 
 
 func (ts *TaskService) CreateNewTask(ctx context.Context, userId int, title string, description string) (int, error) {
 	if userId < 1 {
-		return 0, errors.New("user id must be greater than 0")
+		return 0, ErrIdMustBeGtZero
 	}
 	if title == "" {
-		return 0, errors.New("title must be not empty")
+		return 0, ErrEmptyTitle
 	}
 
 	var desc string
@@ -58,7 +57,7 @@ func (ts *TaskService) CreateNewTask(ctx context.Context, userId int, title stri
 	id, err := ts.repo.Create(ctx, newTask)
 	if err != nil {
 		if IsForeignKeyViolation(err) {
-			return 0, errors.New("user with this id does not exist")
+			return 0, ErrNoUserWithThisId
 		}
 		return 0, err
 	}
@@ -67,17 +66,17 @@ func (ts *TaskService) CreateNewTask(ctx context.Context, userId int, title stri
 
 func (ts *TaskService) DeleteTask(ctx context.Context, id int) error {
 	if id < 1 {
-		return errors.New("id must be greater than 0")
+		return ErrIdMustBeGtZero
 	}
 	return ts.repo.Delete(ctx, id)
 }
 
 func (ts *TaskService) UpdateTitle(ctx context.Context, newTitle string, id int) error {
 	if id < 1 {
-		return errors.New("id must be greater than 0")
+		return ErrIdMustBeGtZero
 	}
 	if newTitle == "" {
-		return errors.New("title must be not empty")
+		return ErrEmptyTitle
 	}
 
 	return ts.repo.UpdateTitle(ctx, newTitle, id)
@@ -85,7 +84,7 @@ func (ts *TaskService) UpdateTitle(ctx context.Context, newTitle string, id int)
 
 func (ts *TaskService) UpdateDescription(ctx context.Context, newDescription string, id int) error {
 	if id < 1 {
-		return errors.New("id must be greater than 0")
+		return ErrIdMustBeGtZero
 	}
 	var desc string
 
@@ -100,7 +99,7 @@ func (ts *TaskService) UpdateDescription(ctx context.Context, newDescription str
 
 func (ts *TaskService) SwitchTaskStatus(ctx context.Context, id int) error {
 	if id < 1 {
-		return errors.New("id must be greater than 0")
+		return ErrIdMustBeGtZero
 	}
 
 	return ts.repo.SwitchTaskStatus(ctx, id)

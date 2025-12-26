@@ -19,17 +19,17 @@ func (uservice *UserService) GetAllUsers(ctx context.Context) ([]User, error) {
 
 func (uservice *UserService) GetUserById(ctx context.Context, id int) (*User, error) {
 	if id < 1 {
-		return nil, errors.New("id must be greater than 0")
+		return nil, ErrIdMustBeGtZero
 	}
 	return uservice.repo.GetById(ctx, id)
 }
 
 func (uservice *UserService) CreateNewUser(ctx context.Context, name string, password string) (int, error) {
 	if len(name) < 1 {
-		return 0, errors.New("name must be greater than 0")
+		return 0, ErrIdMustBeGtZero
 	}
 	if len(password) < 6 {
-		return 0, errors.New("password must be greater than 6")
+		return 0, ErrPasswordMustBeGt6
 	}
 
 	encryptPassword, err := Encrypter(password)
@@ -46,10 +46,10 @@ func (uservice *UserService) CreateNewUser(ctx context.Context, name string, pas
 
 func (uservice *UserService) RenameUser(ctx context.Context, id int, newName string) error {
 	if len(newName) < 1 {
-		return errors.New("len name must be greater than 0")
+		return ErrLenNameIsZero
 	}
 	if id < 1 {
-		return errors.New("id must be greater than 0")
+		return ErrIdMustBeGtZero
 	}
 	err := uservice.repo.UpdateName(ctx, id, newName)
 	if err != nil {
@@ -60,7 +60,7 @@ func (uservice *UserService) RenameUser(ctx context.Context, id int, newName str
 
 func (uservice *UserService) ChangeUsersPass(ctx context.Context, id int, oldPass string, newPass string) error {
 	if id < 1 {
-		return errors.New("id must be greater than 0")
+		return ErrIdMustBeGtZero
 	}
 	if len(oldPass) < 6 {
 		return errors.New("old password must be greater than 6")
@@ -70,7 +70,7 @@ func (uservice *UserService) ChangeUsersPass(ctx context.Context, id int, oldPas
 	}
 
 	if oldPass == newPass {
-		return errors.New("new password must be different from old password")
+		return ErrNewPasswordIsSame
 	}
 
 	user, err := uservice.GetUserById(ctx, id)
@@ -79,7 +79,7 @@ func (uservice *UserService) ChangeUsersPass(ctx context.Context, id int, oldPas
 	}
 
 	if !CompareHashAndPassword(user.Password, oldPass) {
-		return errors.New("old password is incorrect")
+		return ErrOldPasswordIsWrong
 	}
 
 	newHashPass, err := Encrypter(newPass)
@@ -93,7 +93,7 @@ func (uservice *UserService) ChangeUsersPass(ctx context.Context, id int, oldPas
 
 func (uservice *UserService) DeleteUser(ctx context.Context, id int) error {
 	if id < 1 {
-		return errors.New("id must be greater than 0")
+		return ErrIdMustBeGtZero
 	}
 	return uservice.repo.Delete(ctx, id)
 }

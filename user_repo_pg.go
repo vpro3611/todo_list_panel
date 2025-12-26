@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
 )
@@ -34,7 +33,7 @@ func (ur *UserPgRepository) GetAll(ctx context.Context) ([]User, error) {
 		users = append(users, user)
 	}
 	if users == nil {
-		return nil, errors.New("no users found")
+		return nil, ErrNoUsers
 	}
 	return users, nil
 }
@@ -68,7 +67,7 @@ func (ur *UserPgRepository) UpdatePassword(ctx context.Context, id int, newHash 
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return errors.New("user not found")
+		return ErrUserNotFound
 	}
 
 	return nil
@@ -81,7 +80,7 @@ func (ur *UserPgRepository) UpdateName(ctx context.Context, id int, newName stri
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return errors.New("user not found")
+		return ErrUserNotFound
 	}
 
 	return nil
