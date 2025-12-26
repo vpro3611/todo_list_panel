@@ -14,11 +14,12 @@ type UserRepository interface {
 	UpdatePassword(ctx context.Context, id int, newHash string) error
 	UpdateName(ctx context.Context, id int, newName string) error
 	UpdateRole(ctx context.Context, id int, newRole string) error
+	Authenticate(ctx context.Context, name string) (*User, error)
 }
 
 type TaskRepository interface {
 	GetAll(ctx context.Context) ([]Task, error)
-	GetById(ctx context.Context, id int) ([]Task, error)
+	GetByUserId(ctx context.Context, id int) ([]Task, error)
 	Create(ctx context.Context, task Task) (int, error)
 	Delete(ctx context.Context, id int) error
 	UpdateTitle(ctx context.Context, newTitle string, id int) error

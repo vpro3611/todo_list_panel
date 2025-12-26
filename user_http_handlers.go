@@ -7,6 +7,10 @@ import (
 	"net/http"
 )
 
+// this is all for admin, i.e., you can view all users, change their roles, etc.
+// in the tasks section you can also do the same
+// this is only for users, not for tasks and only for admins
+
 func (s *Server) GetAllUsersHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	users, err := s.userSvc.GetAllUsers(ctx)
@@ -229,6 +233,36 @@ func (s *Server) UpdateRoleHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	err = EncodeJSONhelper(w, response)
+	if err != nil {
+		log.Println("Error encoding JSON: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// end of admin handlers
+// start of user handlers
+
+func (s *Server) GetMyProfileHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	claims, ok := ctx.Value(userContextKey).(*Claims)
+	if !ok {
+		log.Println("Error getting user id from context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	userId := claims.UserID
+
+	user, err := s.userSvc.GetUserById(ctx, userId)
+	if err != nil {
+		log.Println("Error getting user by id: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = EncodeJSONhelper(w, user)
 	if err != nil {
 		log.Println("Error encoding JSON: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

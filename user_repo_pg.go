@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
 )
@@ -104,4 +106,24 @@ func (ur *UserPgRepository) UpdateRole(ctx context.Context, id int, newRole stri
 		return ErrSwitchRole
 	}
 	return nil
+}
+
+func (ur *UserPgRepository) Authenticate(ctx context.Context, name string) (*User, error) {
+	var user User
+	err := ur.pool.QueryRow(ctx, "SELECT id, name, password, created_at, updated_at, role FROM users WHERE name = $1",
+		name).Scan(&user.Id,
+		&user.Name,
+		&user.Password,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.Role)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return &user, nil
 }

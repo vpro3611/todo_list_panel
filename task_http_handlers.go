@@ -7,6 +7,10 @@ import (
 	"net/http"
 )
 
+// this is all for tasks, in this case admin can view all tasks, change their status, etc.
+// in the users section you can also do the same
+// this is only for tasks, not for users and only for admins
+
 func (s *Server) GetAllTasksHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tasks, err := s.taskSvc.GetAllTasks(ctx)
@@ -24,7 +28,7 @@ func (s *Server) GetAllTasksHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) GetTaskByIdHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetTaskByUserIdHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	id := chi.URLParam(r, "id")
@@ -236,6 +240,76 @@ func (s *Server) SwitchTaskStatusHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = EncodeJSONhelper(w, response)
+	if err != nil {
+		log.Println("Error encoding JSON: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// here we end the task http handlers for admins
+// and immediately start the user (current client) handlers for tasks
+
+func (s *Server) GetMyTasksHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	claims, ok := ctx.Value(userContextKey).(*Claims)
+	if !ok {
+		log.Println("Error getting user id from context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	id := claims.UserID
+
+	tasks, err := s.taskSvc.GetTaskById(ctx, id)
+	if err != nil {
+		log.Println("Error getting tasks by id: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = EncodeJSONhelper(w, tasks)
+	if err != nil {
+		log.Println("Error encoding JSON: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (s *Server) CreateMyTaskHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	claims, ok := ctx.Value(userContextKey).(*Claims)
+	if !ok {
+		log.Println("Error getting user id from context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	userId := claims.UserID
+
+	var inputTask struct {
+		UserId      int    `json:"user_id,omitempty"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&inputTask); err != nil {
+		log.Println("Error decoding JSON: ", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	idTaskCreate, err := s.taskSvc.CreateNewTask(ctx, userId, inputTask.Title, inputTask.Description)
+	if err != nil {
+		log.Println("Error creating new task: ", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	response := map[string]any{
+		"id":     idTaskCreate,
+		"status": "Task successfully created",
+	}
 	err = EncodeJSONhelper(w, response)
 	if err != nil {
 		log.Println("Error encoding JSON: ", err)

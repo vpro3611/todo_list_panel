@@ -16,7 +16,11 @@ func main() {
 
 	err := godotenv.Load("database.env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file (database.env)")
+	}
+	err = godotenv.Load("token.env")
+	if err != nil {
+		log.Fatal("Error loading .env file (token.env)")
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)

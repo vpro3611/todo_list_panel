@@ -4,5 +4,6 @@
     <file url="file://$PROJECT_DIR$/migrations/20251225143523_create_user_table.down.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/migrations/20251225143523_create_user_table.up.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/migrations/20251225143543_create_task_table.up.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/20251226210612_make_name_unique.up.sql" dialect="GenericSQL" />
   </component>
 </project>

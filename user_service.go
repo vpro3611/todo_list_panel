@@ -114,3 +114,20 @@ func (uservice *UserService) UpdateUserRole(ctx context.Context, id int) error {
 	}
 	return uservice.repo.UpdateRole(ctx, id, newUserRole)
 }
+
+func (uservice *UserService) AuthenticateUser(ctx context.Context, name string, password string) (*User, error) {
+	if len(name) < 1 {
+		return nil, ErrInvalidName
+	}
+
+	user, err := uservice.repo.Authenticate(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	if !CompareHashAndPassword(user.Password, password) {
+		return nil, ErrInvalidPassword
+	}
+
+	return user, nil
+}

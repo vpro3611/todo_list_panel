@@ -27,4 +27,7 @@ var (
 	ErrTaskStatusNotSwitched = errors.New("task's status was not switched")                          // when task status was not switched due to a 'no rows affected' error
 	ErrTaskTitleNotUpdated   = errors.New("task's title was not updated")                            // when a task title was not updated due to a 'no rows affected' error
 	ErrSwitchRole            = errors.New("errors switching user's role")                            // when a user's role was not switched'
+	ErrTokenNotSet           = errors.New("JWT_SECRET is not set")                                   // when JWT_SECRET is not set in the .env file
+	ErrInvalidName           = errors.New("invalid name")
+	ErrInvalidPassword       = errors.New("invalid password")
 )

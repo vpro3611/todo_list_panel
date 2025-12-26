@@ -20,7 +20,7 @@ func (ts *TaskService) GetTaskById(ctx context.Context, id int) ([]Task, error) 
 	if id < 1 {
 		return nil, ErrIdMustBeGtZero
 	}
-	tasks, err := ts.repo.GetById(ctx, id)
+	tasks, err := ts.repo.GetByUserId(ctx, id)
 	if err != nil {
 		return nil, err
 	}

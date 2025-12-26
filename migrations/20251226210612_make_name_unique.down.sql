@@ -1,0 +1,1 @@
+ALTER TABLE DROP DROP CONSTRAINT users_name_key;

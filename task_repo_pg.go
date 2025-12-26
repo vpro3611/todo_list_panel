@@ -47,7 +47,7 @@ func (tr *TaskPgRepository) GetAll(ctx context.Context) ([]Task, error) {
 	return tasks, nil
 }
 
-func (tr *TaskPgRepository) GetById(ctx context.Context, id int) ([]Task, error) {
+func (tr *TaskPgRepository) GetByUserId(ctx context.Context, id int) ([]Task, error) {
 	var tasks []Task
 	row, err := tr.pool.Query(ctx, "SELECT id, user_id, title, description, is_completed, created_at, updated_at FROM tasks WHERE user_id = $1", id)
 	if err != nil {
