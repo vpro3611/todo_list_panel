@@ -7,6 +7,8 @@ import "errors"
 
 const (
 	DB_URL_KEY = "DB_URL" // Key for DB_URL env var, value is being set in database.env
+	ADMIN      = "admin"  // Admin role
+	USER       = "user"   // User role
 )
 
 var (
@@ -24,4 +26,5 @@ var (
 	ErrTaskDescNotUpdated    = errors.New("task's description was not updated")                      // when description was not updated due to a 'no rows affected' error
 	ErrTaskStatusNotSwitched = errors.New("task's status was not switched")                          // when task status was not switched due to a 'no rows affected' error
 	ErrTaskTitleNotUpdated   = errors.New("task's title was not updated")                            // when a task title was not updated due to a 'no rows affected' error
+	ErrSwitchRole            = errors.New("errors switching user's role")                            // when a user's role was not switched'
 )

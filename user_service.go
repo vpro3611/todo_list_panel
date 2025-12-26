@@ -97,3 +97,20 @@ func (uservice *UserService) DeleteUser(ctx context.Context, id int) error {
 	}
 	return uservice.repo.Delete(ctx, id)
 }
+
+func (uservice *UserService) UpdateUserRole(ctx context.Context, id int) error {
+	if id < 1 {
+		return ErrIdMustBeGtZero
+	}
+	user, err := uservice.GetUserById(ctx, id)
+	if err != nil {
+		return err
+	}
+	var newUserRole string
+	if user.Role == USER {
+		newUserRole = ADMIN
+	} else {
+		newUserRole = USER
+	}
+	return uservice.repo.UpdateRole(ctx, id, newUserRole)
+}

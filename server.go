@@ -22,7 +22,6 @@ func NewServer(userSvc *UserService, taskSvc *TaskService) *Server {
 	s.router.Use(middleware.StripSlashes)
 
 	s.Routes()
-
 	return s
 }
 
@@ -36,7 +35,7 @@ func (s *Server) Routes() {
 		r.Delete("/{id}", s.DeleteUserHTTP)
 		r.Post("/{id}/tasks", s.CreateNewTaskHTTP) // создать таск данному пользователю
 		r.Get("/{id}/tasks", s.GetTaskByIdHTTP)    // получить таски данного пользователя
-
+		r.Patch("/{id}/role", s.UpdateRoleHTTP)
 	})
 	s.router.Route("/tasks", func(r chi.Router) {
 		r.Get("/", s.GetAllTasksHTTP)

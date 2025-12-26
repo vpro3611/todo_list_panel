@@ -13,6 +13,7 @@ type UserRepository interface {
 	Delete(ctx context.Context, id int) error
 	UpdatePassword(ctx context.Context, id int, newHash string) error
 	UpdateName(ctx context.Context, id int, newName string) error
+	UpdateRole(ctx context.Context, id int, newRole string) error
 }
 
 type TaskRepository interface {

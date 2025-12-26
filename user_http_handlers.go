@@ -203,3 +203,35 @@ func (s *Server) DeleteUserHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func (s *Server) UpdateRoleHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id := chi.URLParam(r, "id")
+	idInt, err := ConvertToInt(id)
+	if err != nil {
+		log.Println("Error parsing id: ", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = s.userSvc.UpdateUserRole(ctx, idInt)
+	if err != nil {
+		log.Println("Error updating user role: ", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	response := map[string]any{
+		"id":     idInt,
+		"status": "User role successfully updated",
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = EncodeJSONhelper(w, response)
+	if err != nil {
+		log.Println("Error encoding JSON: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}

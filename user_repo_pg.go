@@ -17,7 +17,7 @@ func NewUserPgRepository(pool *pgxpool.Pool) *UserPgRepository {
 }
 
 func (ur *UserPgRepository) GetAll(ctx context.Context) ([]User, error) {
-	rows, err := ur.pool.Query(ctx, "SELECT id, name, password, created_at, updated_at FROM users")
+	rows, err := ur.pool.Query(ctx, "SELECT id, name, password, created_at, updated_at, role FROM users")
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (ur *UserPgRepository) GetAll(ctx context.Context) ([]User, error) {
 	var users []User
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.Id, &user.Name, &user.Password, &user.CreatedAt, &user.UpdatedAt)
+		err := rows.Scan(&user.Id, &user.Name, &user.Password, &user.CreatedAt, &user.UpdatedAt, &user.Role)
 		if err != nil {
 			return nil, err
 		}
@@ -40,11 +40,12 @@ func (ur *UserPgRepository) GetAll(ctx context.Context) ([]User, error) {
 
 func (ur *UserPgRepository) GetById(ctx context.Context, id int) (*User, error) {
 	var u User
-	err := ur.pool.QueryRow(ctx, "SELECT id, name, password, created_at, updated_at FROM users WHERE id = $1", id).Scan(&u.Id,
+	err := ur.pool.QueryRow(ctx, "SELECT id, name, password, created_at, updated_at, role FROM users WHERE id = $1", id).Scan(&u.Id,
 		&u.Name,
 		&u.Password,
 		&u.CreatedAt,
-		&u.UpdatedAt)
+		&u.UpdatedAt,
+		&u.Role)
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +91,17 @@ func (ur *UserPgRepository) Delete(ctx context.Context, id int) error {
 	_, err := ur.pool.Exec(ctx, "DELETE FROM users WHERE id = $1", id)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (ur *UserPgRepository) UpdateRole(ctx context.Context, id int, newRole string) error {
+	cmdTag, err := ur.pool.Exec(ctx, "UPDATE users SET role = $1, updated_at = $2 WHERE id = $3", newRole, time.Now(), id)
+	if err != nil {
+		return err
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return ErrSwitchRole
 	}
 	return nil
 }
