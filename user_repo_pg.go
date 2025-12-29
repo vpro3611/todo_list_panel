@@ -40,15 +40,19 @@ func (ur *UserPgRepository) GetAll(ctx context.Context) ([]User, error) {
 	return users, nil
 }
 
-func (ur *UserPgRepository) GetById(ctx context.Context, id int) (*User, error) {
+func (ur *UserPgRepository) GetById(ctx context.Context, id int, actorId int, actorRole string) (*User, error) {
 	var u User
-	err := ur.pool.QueryRow(ctx, "SELECT id, name, password, created_at, updated_at, role FROM users WHERE id = $1", id).Scan(&u.Id,
+	query := "SELECT id, name, password, created_at, updated_at, role FROM users WHERE id = $1 AND (id = $2 OR $3 = 'admin')"
+	err := ur.pool.QueryRow(ctx, query, id, actorId, actorRole).Scan(&u.Id,
 		&u.Name,
 		&u.Password,
 		&u.CreatedAt,
 		&u.UpdatedAt,
 		&u.Role)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
 		return nil, err
 	}
 	return &u, nil
@@ -63,8 +67,9 @@ func (ur *UserPgRepository) Create(ctx context.Context, user User) (int, error) 
 	return id, nil
 }
 
-func (ur *UserPgRepository) UpdatePassword(ctx context.Context, id int, newHash string) error {
-	cmdTag, err := ur.pool.Exec(ctx, "UPDATE users SET password = $1, updated_at = $2 WHERE id = $3", newHash, time.Now(), id)
+func (ur *UserPgRepository) UpdatePassword(ctx context.Context, id int, newHash string, actorId int, actorRole string) error {
+	query := "UPDATE users SET password = $1, updated_at = $2 WHERE id = $3 AND ($3 = $4 OR $5 = 'admin')"
+	cmdTag, err := ur.pool.Exec(ctx, query, newHash, time.Now(), id, actorId, actorRole)
 	if err != nil {
 		return err
 	}
@@ -76,8 +81,10 @@ func (ur *UserPgRepository) UpdatePassword(ctx context.Context, id int, newHash 
 	return nil
 }
 
-func (ur *UserPgRepository) UpdateName(ctx context.Context, id int, newName string) error {
-	cmdTag, err := ur.pool.Exec(ctx, "UPDATE users SET name = $1, updated_at = $2 WHERE id = $3", newName, time.Now(), id)
+func (ur *UserPgRepository) UpdateName(ctx context.Context, id int, newName string, actorId int, actorRole string) error {
+	query := "UPDATE users SET name = $1, updated_at = $2 WHERE id = $3 AND ($3 = $4 OR $5 = 'admin')"
+
+	cmdTag, err := ur.pool.Exec(ctx, query, newName, time.Now(), id, actorId, actorRole)
 	if err != nil {
 		return err
 	}
@@ -89,11 +96,18 @@ func (ur *UserPgRepository) UpdateName(ctx context.Context, id int, newName stri
 	return nil
 }
 
-func (ur *UserPgRepository) Delete(ctx context.Context, id int) error {
-	_, err := ur.pool.Exec(ctx, "DELETE FROM users WHERE id = $1", id)
+func (ur *UserPgRepository) Delete(ctx context.Context, id int, actorId int, actorRole string) error {
+	query := "DELETE FROM users WHERE id = $1 AND (id = $2 OR $3 = 'admin')"
+
+	cmdTag, err := ur.pool.Exec(ctx, query, id, actorId, actorRole)
 	if err != nil {
 		return err
 	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return ErrUserNotFound
+	}
+
 	return nil
 }
 

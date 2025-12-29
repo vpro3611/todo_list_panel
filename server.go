@@ -32,7 +32,7 @@ func (s *Server) LoginHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
+	defer r.Body.Close()
 	user, err := s.userSvc.AuthenticateUser(ctx, req.Name, req.Password)
 	if err != nil {
 		log.Println("Error authenticating user: ", err)
@@ -74,48 +74,61 @@ func NewServer(userSvc *UserService, taskSvc *TaskService) *Server {
 func (s *Server) Routes() {
 
 	//s.router.Post("/setup-admin", s.CreateNewUserHTTP)
-
-	s.router.Post("/login", s.LoginHTTP)
+	s.router.Post("/sign-in", s.CreateNewUserHTTP) //
+	s.router.Post("/login", s.LoginHTTP)           //
 
 	s.router.Group(func(r chi.Router) {
 		r.Use(JWTmiddleware)
 		r.Route("/admin", func(r chi.Router) {
 			r.Use(AdminOnly)
 			// admin can see all users and do these actions with them
-			r.Route("/users", func(r chi.Router) {
-				r.Get("/", s.GetAllUsersHTTP)
-				r.Get("/{id}", s.GetUserByIdHTTP)
-				r.Post("/", s.CreateNewUserHTTP)
-				r.Patch("/{id}/rename", s.RenameUserHTTP)
-				r.Patch("/{id}/password", s.ChangeUserPasswordHTTP)
-				r.Delete("/{id}", s.DeleteUserHTTP)
-				r.Post("/{id}/tasks", s.CreateNewTaskHTTP)  // создать таск данному пользователю
-				r.Get("/{id}/tasks", s.GetTaskByUserIdHTTP) // получить таски данного пользователя
-				r.Patch("/{id}/role", s.UpdateRoleHTTP)
+			r.Route("/users", func(r chi.Router) { // /users
+				r.Get("/", s.GetAllUsersHTTP)    //
+				r.Post("/", s.CreateNewUserHTTP) //
+
+				r.Route("/{id}", func(r chi.Router) { //
+					r.Use(s.InjectTargetID)
+					r.Get("/", s.GetUserByIdHTTP)                  //
+					r.Patch("/rename", s.RenameUserHTTP)           //
+					r.Patch("/password", s.ChangeUserPasswordHTTP) //
+					r.Patch("/role", s.UpdateRoleHTTP)             //
+					r.Delete("/", s.DeleteUserHTTP)                //
+
+					r.Get("/tasks", s.GetTaskByUserIdHTTP) // получить таски данного пользователя //
+					r.Post("/tasks", s.CreateNewTaskHTTP)  // создать таск данному пользователю   //
+				})
 			})
 			// admin can see all tasks and do these actions with them, as well as with users
-			r.Route("/tasks", func(r chi.Router) {
-				r.Get("/", s.GetAllTasksHTTP)
-				r.Delete("/{id}", s.DeleteTaskHTTP)
-				r.Patch("/{id}/title", s.UpdateTaskTitleHTTP)
-				r.Patch("/{id}/description", s.UpdateTaskDescriptionHTTP)
-				r.Patch("/{id}/switch", s.SwitchTaskStatusHTTP)
+			r.Route("/tasks", func(r chi.Router) { //
+				r.Get("/", s.GetAllTasksHTTP)         //
+				r.Route("/{id}", func(r chi.Router) { //
+					r.Delete("/", s.DeleteTaskHTTP)                      //
+					r.Patch("/title", s.UpdateTaskTitleHTTP)             //
+					r.Patch("/description", s.UpdateTaskDescriptionHTTP) //
+					r.Patch("/switch", s.SwitchTaskStatusHTTP)           //
+				})
 			})
 		})
 		// this is for the users, /me means that they are logged in and can do actions with their own account ONLY
-		r.Route("/me", func(r chi.Router) {
-			r.Get("/", s.GetMyProfileHTTP)
-			r.Get("/tasks", s.GetMyTasksHTTP)
-			r.Post("/tasks", s.CreateMyTaskHTTP)
-			// TODO : add :
-			//  1. switch status task of a current user
-			//  2. delete task of a current user
-			//  3. update task title of a current user
-			//  4. update task description of a current user
-			//  5. update current user's password
-			//  6. update current user's name
-			//  7. <Optional> delete current user's account, but this is not compulsory
+		r.Route("/me", func(r chi.Router) { //
+			r.Use(s.InjectTargetID)
+
+			r.Get("/", s.GetUserByIdHTTP)                  //
+			r.Patch("/rename", s.RenameUserHTTP)           //
+			r.Patch("/password", s.ChangeUserPasswordHTTP) //
+			r.Delete("/", s.DeleteUserHTTP)
+
+			r.Route("/tasks", func(r chi.Router) { //
+				r.Get("/", s.GetTaskByUserIdHTTP) //
+				r.Post("/", s.CreateNewTaskHTTP)  //
+
+				r.Route("/{id}", func(r chi.Router) { //
+					r.Delete("/", s.DeleteTaskHTTP)                      //
+					r.Patch("/switch", s.SwitchTaskStatusHTTP)           //
+					r.Patch("/title", s.UpdateTaskTitleHTTP)             //
+					r.Patch("/description", s.UpdateTaskDescriptionHTTP) //
+				})
+			})
 		})
 	})
-
 }

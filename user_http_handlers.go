@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
 )
@@ -13,6 +12,12 @@ import (
 
 func (s *Server) GetAllUsersHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	claims, ok := ctx.Value(userContextKey).(*Claims)
+	if !ok || claims.Role != ADMIN {
+		log.Printf("This is for admins only! Unsafe request for GetAllUsers: %s with id %d\n", claims.Role, claims.UserID)
+		http.Error(w, "This is for admins only!", http.StatusForbidden)
+		return
+	}
 	users, err := s.userSvc.GetAllUsers(ctx)
 	if err != nil {
 		log.Println("Error getting all users: ", err)
@@ -30,14 +35,22 @@ func (s *Server) GetAllUsersHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) GetUserByIdHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	id := chi.URLParam(r, "id")
-	idInt, err := ConvertToInt(id)
-	if err != nil {
-		log.Println("Error parsing id: ", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+
+	claims, ok := ctx.Value(userContextKey).(*Claims)
+	if !ok {
+		log.Println("Error getting user id from context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	user, err := s.userSvc.GetUserById(ctx, idInt)
+
+	targetUserId, ok := ctx.Value(targetIdContextKey).(int)
+	if !ok {
+		log.Println("Error getting target user id from context")
+		http.Error(w, "Unauthorized", http.StatusInternalServerError)
+		return
+	}
+
+	user, err := s.userSvc.GetUserById(ctx, targetUserId, claims.UserID, claims.Role)
 	if err != nil {
 		log.Println("Error getting user by id: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -62,6 +75,7 @@ func (s *Server) CreateNewUserHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
 
 	id, err := s.userSvc.CreateNewUser(ctx, user.Name, user.Password)
 	if err != nil {
@@ -89,13 +103,17 @@ func (s *Server) CreateNewUserHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) RenameUserHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	claims, ok := ctx.Value(userContextKey).(*Claims)
+	if !ok {
+		log.Println("Error getting user id from context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
-	id := chi.URLParam(r, "id")
-	idInt, err := ConvertToInt(id)
-
-	if err != nil {
-		log.Println("Error parsing id: ", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	targetUserId, ok := ctx.Value(targetIdContextKey).(int)
+	if !ok {
+		log.Println("Error getting target user id from context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -109,7 +127,9 @@ func (s *Server) RenameUserHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.userSvc.RenameUser(ctx, idInt, input.Name)
+	defer r.Body.Close()
+
+	err := s.userSvc.RenameUser(ctx, targetUserId, input.Name, claims.UserID, claims.Role)
 	if err != nil {
 		log.Println("Error renaming user: ", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -117,7 +137,7 @@ func (s *Server) RenameUserHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]any{
-		"id":     idInt,
+		"id":     targetUserId,
 		"status": "User successfully renamed",
 	}
 
@@ -133,11 +153,17 @@ func (s *Server) RenameUserHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) ChangeUserPasswordHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	id := chi.URLParam(r, "id")
-	idInt, err := ConvertToInt(id)
-	if err != nil {
-		log.Println("Error parsing id: ", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	claims, ok := ctx.Value(userContextKey).(*Claims)
+	if !ok {
+		log.Println("Error getting user id from context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	targetUserId, ok := ctx.Value(targetIdContextKey).(int)
+	if !ok {
+		log.Println("Error getting target user id from context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -152,20 +178,24 @@ func (s *Server) ChangeUserPasswordHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = s.userSvc.ChangeUsersPass(ctx, idInt, inputPasswords.OldPassword, inputPasswords.NewPassword)
+	defer r.Body.Close()
+
+	err := s.userSvc.ChangeUsersPass(ctx, targetUserId, inputPasswords.OldPassword, inputPasswords.NewPassword, claims.UserID, claims.Role)
 
 	if err != nil {
 		log.Println("Error changing user password: ", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
+
 	response := map[string]any{
-		"id":     idInt,
+		"id":     targetUserId,
 		"status": "Password successfully changed",
 	}
+
 	err = EncodeJSONhelper(w, response)
 	if err != nil {
 		log.Println("Error encoding JSON: ", err)
@@ -177,16 +207,21 @@ func (s *Server) ChangeUserPasswordHTTP(w http.ResponseWriter, r *http.Request) 
 func (s *Server) DeleteUserHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	id := chi.URLParam(r, "id")
-	idInt, err := ConvertToInt(id)
-
-	if err != nil {
-		log.Println("Error parsing id: ", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	claims, ok := ctx.Value(userContextKey).(*Claims)
+	if !ok {
+		log.Println("Error getting user id from context")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	err = s.userSvc.DeleteUser(ctx, idInt)
+	targetUserId, ok := ctx.Value(targetIdContextKey).(int)
+	if !ok {
+		log.Println("Error getting target user id from context")
+		http.Error(w, "Unauthorized", http.StatusInternalServerError)
+		return
+	}
+
+	err := s.userSvc.DeleteUser(ctx, targetUserId, claims.UserID, claims.Role)
 
 	if err != nil {
 		log.Println("Error deleting user: ", err)
@@ -196,7 +231,7 @@ func (s *Server) DeleteUserHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	response := map[string]any{
-		"id":     idInt,
+		"id":     targetUserId,
 		"status": "User successfully deleted",
 	}
 	err = EncodeJSONhelper(w, response)
@@ -210,16 +245,21 @@ func (s *Server) DeleteUserHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) UpdateRoleHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	id := chi.URLParam(r, "id")
-	idInt, err := ConvertToInt(id)
-	if err != nil {
-		log.Println("Error parsing id: ", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	claims, ok := ctx.Value(userContextKey).(*Claims)
+	if !ok || claims.Role != ADMIN {
+		log.Printf("This is for admins only! Unsafe request for UpdateRole: %s with id %d\n", claims.Role, claims.UserID)
+		http.Error(w, "This is for admins only!", http.StatusForbidden)
 		return
 	}
 
-	err = s.userSvc.UpdateUserRole(ctx, idInt)
+	targetId, ok := ctx.Value(targetIdContextKey).(int)
+	if !ok {
+		log.Println("Error getting target user id from context")
+		http.Error(w, "Unauthorized", http.StatusInternalServerError)
+		return
+	}
+
+	err := s.userSvc.UpdateUserRole(ctx, targetId, claims.UserID, claims.Role)
 	if err != nil {
 		log.Println("Error updating user role: ", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -227,7 +267,7 @@ func (s *Server) UpdateRoleHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]any{
-		"id":     idInt,
+		"id":     targetId,
 		"status": "User role successfully updated",
 	}
 
@@ -241,31 +281,3 @@ func (s *Server) UpdateRoleHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // end of admin handlers
-// start of user handlers
-
-func (s *Server) GetMyProfileHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	claims, ok := ctx.Value(userContextKey).(*Claims)
-	if !ok {
-		log.Println("Error getting user id from context")
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	userId := claims.UserID
-
-	user, err := s.userSvc.GetUserById(ctx, userId)
-	if err != nil {
-		log.Println("Error getting user by id: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	err = EncodeJSONhelper(w, user)
-	if err != nil {
-		log.Println("Error encoding JSON: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}

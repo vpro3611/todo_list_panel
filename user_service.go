@@ -17,11 +17,11 @@ func (uservice *UserService) GetAllUsers(ctx context.Context) ([]User, error) {
 	return uservice.repo.GetAll(ctx)
 }
 
-func (uservice *UserService) GetUserById(ctx context.Context, id int) (*User, error) {
+func (uservice *UserService) GetUserById(ctx context.Context, id int, actorId int, actorRole string) (*User, error) {
 	if id < 1 {
 		return nil, ErrIdMustBeGtZero
 	}
-	return uservice.repo.GetById(ctx, id)
+	return uservice.repo.GetById(ctx, id, actorId, actorRole)
 }
 
 func (uservice *UserService) CreateNewUser(ctx context.Context, name string, password string) (int, error) {
@@ -44,21 +44,21 @@ func (uservice *UserService) CreateNewUser(ctx context.Context, name string, pas
 	return uservice.repo.Create(ctx, newUser)
 }
 
-func (uservice *UserService) RenameUser(ctx context.Context, id int, newName string) error {
+func (uservice *UserService) RenameUser(ctx context.Context, id int, newName string, actorId int, actorRole string) error {
 	if len(newName) < 1 {
 		return ErrLenNameIsZero
 	}
 	if id < 1 {
 		return ErrIdMustBeGtZero
 	}
-	err := uservice.repo.UpdateName(ctx, id, newName)
+	err := uservice.repo.UpdateName(ctx, id, newName, actorId, actorRole)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (uservice *UserService) ChangeUsersPass(ctx context.Context, id int, oldPass string, newPass string) error {
+func (uservice *UserService) ChangeUsersPass(ctx context.Context, id int, oldPass string, newPass string, actorId int, actorRole string) error {
 	if id < 1 {
 		return ErrIdMustBeGtZero
 	}
@@ -73,7 +73,7 @@ func (uservice *UserService) ChangeUsersPass(ctx context.Context, id int, oldPas
 		return ErrNewPasswordIsSame
 	}
 
-	user, err := uservice.GetUserById(ctx, id)
+	user, err := uservice.GetUserById(ctx, id, actorId, actorRole)
 	if err != nil {
 		return err
 	}
@@ -87,22 +87,22 @@ func (uservice *UserService) ChangeUsersPass(ctx context.Context, id int, oldPas
 		return err
 	}
 	user.Password = newHashPass
-	return uservice.repo.UpdatePassword(ctx, id, newHashPass)
+	return uservice.repo.UpdatePassword(ctx, id, newHashPass, actorId, actorRole)
 
 }
 
-func (uservice *UserService) DeleteUser(ctx context.Context, id int) error {
+func (uservice *UserService) DeleteUser(ctx context.Context, id int, actorId int, actorRole string) error {
 	if id < 1 {
 		return ErrIdMustBeGtZero
 	}
-	return uservice.repo.Delete(ctx, id)
+	return uservice.repo.Delete(ctx, id, actorId, actorRole)
 }
 
-func (uservice *UserService) UpdateUserRole(ctx context.Context, id int) error {
+func (uservice *UserService) UpdateUserRole(ctx context.Context, id int, actorId int, actorRole string) error {
 	if id < 1 {
 		return ErrIdMustBeGtZero
 	}
-	user, err := uservice.GetUserById(ctx, id)
+	user, err := uservice.GetUserById(ctx, id, actorId, actorRole)
 	if err != nil {
 		return err
 	}

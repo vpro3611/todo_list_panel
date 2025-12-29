@@ -12,15 +12,14 @@ import (
 	"time"
 )
 
+func InitConfingEnv() error {
+	return godotenv.Load("config.env")
+}
+
 func main() {
 
-	err := godotenv.Load("database.env")
-	if err != nil {
-		log.Fatal("Error loading .env file (database.env)")
-	}
-	err = godotenv.Load("token.env")
-	if err != nil {
-		log.Fatal("Error loading .env file (token.env)")
+	if err := InitConfingEnv(); err != nil {
+		log.Fatal("Error loading .env file (config.env)")
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
@@ -52,7 +51,7 @@ func main() {
 	srv := NewServer(userService, taskService)
 
 	httpServer := http.Server{
-		Addr:    ":8080",
+		Addr:    os.Getenv("SERVER_PORT"),
 		Handler: srv.router,
 	}
 

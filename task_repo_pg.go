@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
 )
@@ -47,9 +48,10 @@ func (tr *TaskPgRepository) GetAll(ctx context.Context) ([]Task, error) {
 	return tasks, nil
 }
 
-func (tr *TaskPgRepository) GetByUserId(ctx context.Context, id int) ([]Task, error) {
+func (tr *TaskPgRepository) GetByUserId(ctx context.Context, id int, actorID int, actorRole string) ([]Task, error) {
 	var tasks []Task
-	row, err := tr.pool.Query(ctx, "SELECT id, user_id, title, description, is_completed, created_at, updated_at FROM tasks WHERE user_id = $1", id)
+	query := "SELECT id, user_id, title, description, is_completed, created_at, updated_at FROM tasks WHERE user_id = $1 AND (user_id = $2 OR $3 = 'admin')"
+	row, err := tr.pool.Query(ctx, query, id, actorID, actorRole)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +76,7 @@ func (tr *TaskPgRepository) GetByUserId(ctx context.Context, id int) ([]Task, er
 		return nil, err
 	}
 
-	if tasks == nil {
+	if tasks == nil || len(tasks) == 0 {
 		return nil, ErrNoTasks
 	}
 
@@ -90,16 +92,24 @@ func (tr *TaskPgRepository) Create(ctx context.Context, task Task) (int, error) 
 	return id, nil
 }
 
-func (tr *TaskPgRepository) Delete(ctx context.Context, id int) error {
-	_, err := tr.pool.Exec(ctx, "DELETE FROM tasks WHERE id = $1", id)
+func (tr *TaskPgRepository) Delete(ctx context.Context, id int, actorId int, actorRole string) error {
+	query := "DELETE FROM tasks WHERE id = $1 AND (user_id = $2 OR $3 = 'admin')"
+	cmdTag, err := tr.pool.Exec(ctx, query, id, actorId, actorRole)
+
+	if cmdTag.RowsAffected() == 0 {
+		return errors.New("task not deleted")
+	}
+
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (tr *TaskPgRepository) UpdateTitle(ctx context.Context, newTitle string, id int) error {
-	cmdTag, err := tr.pool.Exec(ctx, "UPDATE tasks SET title = $1, updated_at = $2 WHERE id = $3", newTitle, time.Now(), id)
+func (tr *TaskPgRepository) UpdateTitle(ctx context.Context, newTitle string, id int, actorId int, actorRole string) error {
+	query := "UPDATE tasks SET title = $1, updated_at = $2 WHERE id = $3 AND (user_id = $4 OR $5 = 'admin')"
+	cmdTag, err := tr.pool.Exec(ctx, query, newTitle, time.Now(), id, actorId, actorRole)
 	if err != nil {
 		return err
 	}
@@ -111,8 +121,9 @@ func (tr *TaskPgRepository) UpdateTitle(ctx context.Context, newTitle string, id
 	return nil
 }
 
-func (tr *TaskPgRepository) UpdateDescription(ctx context.Context, newDescription string, id int) error {
-	cmdTag, err := tr.pool.Exec(ctx, "UPDATE tasks SET description = $1, updated_at = $2 WHERE id = $3", newDescription, time.Now(), id)
+func (tr *TaskPgRepository) UpdateDescription(ctx context.Context, newDescription string, id int, actorId int, actorRole string) error {
+	query := "UPDATE tasks SET description = $1, updated_at = $2 WHERE id = $3 AND (user_id = $4 OR $5 = 'admin')"
+	cmdTag, err := tr.pool.Exec(ctx, query, newDescription, time.Now(), id, actorId, actorRole)
 	if err != nil {
 		return err
 	}
@@ -124,8 +135,9 @@ func (tr *TaskPgRepository) UpdateDescription(ctx context.Context, newDescriptio
 	return nil
 }
 
-func (tr *TaskPgRepository) SwitchTaskStatus(ctx context.Context, id int) error {
-	cmdTag, err := tr.pool.Exec(ctx, "UPDATE tasks SET is_completed = NOT is_completed, updated_at = $1 WHERE id = $2", time.Now(), id)
+func (tr *TaskPgRepository) SwitchTaskStatus(ctx context.Context, id int, actorId int, actorRole string) error {
+	query := "UPDATE tasks SET is_completed = NOT is_completed, updated_at = $1 WHERE id = $2 AND (user_id = $3 OR $4 = 'admin')"
+	cmdTag, err := tr.pool.Exec(ctx, query, time.Now(), id, actorId, actorRole)
 	if err != nil {
 		return err
 	}

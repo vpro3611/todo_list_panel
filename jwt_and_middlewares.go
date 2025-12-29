@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type Claims struct {
@@ -18,6 +20,10 @@ type Claims struct {
 type contextKey string
 
 const userContextKey = contextKey("user")
+
+type contextKeyTargetId string
+
+const targetIdContextKey = contextKeyTargetId("target_id")
 
 func JWTmiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +63,7 @@ func JWTmiddleware(next http.Handler) http.Handler {
 func AdminOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claims, ok := r.Context().Value(userContextKey).(*Claims)
-		if !ok || claims.Role != "admin" {
+		if !ok || claims.Role != ADMIN {
 			http.Error(w, "This is for admins only!", http.StatusForbidden)
 			return
 		}
@@ -81,4 +87,31 @@ func GenerateJWT(userID int, role string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
+}
+
+// for injecting the keys, with context
+
+func (s *Server) InjectTargetID(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		claims, ok := r.Context().Value(userContextKey).(*Claims)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		idParam := chi.URLParam(r, "id")
+		if idParam == "" {
+			ctx := context.WithValue(r.Context(), targetIdContextKey, claims.UserID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
+		targetId, err := ConvertToInt(idParam)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), targetIdContextKey, targetId)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

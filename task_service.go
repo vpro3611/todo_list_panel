@@ -16,11 +16,11 @@ func (ts *TaskService) GetAllTasks(ctx context.Context) ([]Task, error) {
 	return ts.repo.GetAll(ctx)
 }
 
-func (ts *TaskService) GetTaskById(ctx context.Context, id int) ([]Task, error) {
+func (ts *TaskService) GetTaskById(ctx context.Context, id int, actorId int, actorRole string) ([]Task, error) {
 	if id < 1 {
 		return nil, ErrIdMustBeGtZero
 	}
-	tasks, err := ts.repo.GetByUserId(ctx, id)
+	tasks, err := ts.repo.GetByUserId(ctx, id, actorId, actorRole)
 	if err != nil {
 		return nil, err
 	}
@@ -64,14 +64,14 @@ func (ts *TaskService) CreateNewTask(ctx context.Context, userId int, title stri
 	return id, nil
 }
 
-func (ts *TaskService) DeleteTask(ctx context.Context, id int) error {
+func (ts *TaskService) DeleteTask(ctx context.Context, id int, actorId int, actorRole string) error {
 	if id < 1 {
 		return ErrIdMustBeGtZero
 	}
-	return ts.repo.Delete(ctx, id)
+	return ts.repo.Delete(ctx, id, actorId, actorRole)
 }
 
-func (ts *TaskService) UpdateTitle(ctx context.Context, newTitle string, id int) error {
+func (ts *TaskService) UpdateTitle(ctx context.Context, newTitle string, id int, actorId int, actorRole string) error {
 	if id < 1 {
 		return ErrIdMustBeGtZero
 	}
@@ -79,10 +79,10 @@ func (ts *TaskService) UpdateTitle(ctx context.Context, newTitle string, id int)
 		return ErrEmptyTitle
 	}
 
-	return ts.repo.UpdateTitle(ctx, newTitle, id)
+	return ts.repo.UpdateTitle(ctx, newTitle, id, actorId, actorRole)
 }
 
-func (ts *TaskService) UpdateDescription(ctx context.Context, newDescription string, id int) error {
+func (ts *TaskService) UpdateDescription(ctx context.Context, newDescription string, id int, actorId int, actorRole string) error {
 	if id < 1 {
 		return ErrIdMustBeGtZero
 	}
@@ -94,13 +94,13 @@ func (ts *TaskService) UpdateDescription(ctx context.Context, newDescription str
 		desc = newDescription
 	}
 
-	return ts.repo.UpdateDescription(ctx, desc, id)
+	return ts.repo.UpdateDescription(ctx, desc, id, actorId, actorRole)
 }
 
-func (ts *TaskService) SwitchTaskStatus(ctx context.Context, id int) error {
+func (ts *TaskService) SwitchTaskStatus(ctx context.Context, id int, actorId int, actorRole string) error {
 	if id < 1 {
 		return ErrIdMustBeGtZero
 	}
 
-	return ts.repo.SwitchTaskStatus(ctx, id)
+	return ts.repo.SwitchTaskStatus(ctx, id, actorId, actorRole)
 }
