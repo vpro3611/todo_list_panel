@@ -95,6 +95,10 @@ func (uservice *UserService) DeleteUser(ctx context.Context, id int, actorId int
 	if id < 1 {
 		return ErrIdMustBeGtZero
 	}
+
+	if id != actorId && actorRole != ADMIN {
+		return errors.New("you can only delete yourself")
+	}
 	return uservice.repo.Delete(ctx, id, actorId, actorRole)
 }
 

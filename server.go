@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/rs/cors"
 	"log"
 	"net/http"
+	"os"
 )
 
 type Server struct {
@@ -63,9 +65,22 @@ func NewServer(userSvc *UserService, taskSvc *TaskService) *Server {
 		taskSvc: taskSvc,
 		router:  chi.NewRouter(),
 	}
+
+	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{allowedOrigins, "http://127.0.0.1:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowCredentials: true,
+		Debug:            true,
+	})
+
 	s.router.Use(middleware.Logger)
 	s.router.Use(middleware.Recoverer)
 	s.router.Use(middleware.StripSlashes)
+
+	s.router.Use(c.Handler)
 
 	s.Routes()
 	return s
@@ -74,7 +89,7 @@ func NewServer(userSvc *UserService, taskSvc *TaskService) *Server {
 func (s *Server) Routes() {
 
 	//s.router.Post("/setup-admin", s.CreateNewUserHTTP)
-	s.router.Post("/sign-in", s.CreateNewUserHTTP) //
+	s.router.Post("/sign-up", s.CreateNewUserHTTP) //
 	s.router.Post("/login", s.LoginHTTP)           //
 
 	s.router.Group(func(r chi.Router) {
