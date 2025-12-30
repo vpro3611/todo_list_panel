@@ -104,3 +104,10 @@ func (ts *TaskService) SwitchTaskStatus(ctx context.Context, id int, actorId int
 
 	return ts.repo.SwitchTaskStatus(ctx, id, actorId, actorRole)
 }
+
+func (ts *TaskService) GetTaskByItsId(ctx context.Context, taskId int, actorId int, actorRole string) (*Task, error) {
+	if taskId < 1 {
+		return nil, ErrIdMustBeGtZero
+	}
+	return ts.repo.GetTaskById(ctx, taskId, actorId, actorRole)
+}
