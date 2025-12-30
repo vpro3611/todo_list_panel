@@ -148,3 +148,33 @@ func (tr *TaskPgRepository) SwitchTaskStatus(ctx context.Context, id int, actorI
 
 	return nil
 }
+
+func (tr *TaskPgRepository) GetTaskById(ctx context.Context, id int, actorId int, actorRole string) (*Task, error) {
+	query := "SELECT id, user_id, title, description, is_completed, created_at, updated_at FROM tasks WHERE id = $1 AND (user_id = $2 OR $3 = 'admin')"
+
+	var task Task
+
+	err := tr.pool.QueryRow(ctx, query, id, actorId, actorRole).Scan(&task.Id,
+		&task.UserId,
+		&task.Title,
+		&task.Description,
+		&task.IsCompleted,
+		&task.CreatedAt,
+		&task.UpdatedAt)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &task, nil
+
+	// type Task struct {
+	//	Id          int       `json:"id"`
+	//	UserId      int       `json:"user_id"`
+	//	Title       string    `json:"title"`
+	//	Description string    `json:"description"`
+	//	IsCompleted bool      `json:"is_completed"`
+	//	CreatedAt   time.Time `json:"created_at"`
+	//	UpdatedAt   time.Time `json:"updated_at"`
+	//}
+}
