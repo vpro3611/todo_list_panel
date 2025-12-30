@@ -70,7 +70,7 @@ func NewServer(userSvc *UserService, taskSvc *TaskService) *Server {
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{allowedOrigins, "http://127.0.0.1:5173"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		AllowCredentials: true,
 		Debug:            true,
@@ -89,17 +89,17 @@ func NewServer(userSvc *UserService, taskSvc *TaskService) *Server {
 func (s *Server) Routes() {
 
 	//s.router.Post("/setup-admin", s.CreateNewUserHTTP)
-	s.router.Post("/sign-up", s.CreateNewUserHTTP) //
-	s.router.Post("/login", s.LoginHTTP)           //
+	s.router.Post("/sign-up", s.CreateNewUserHTTP) // front completed
+	s.router.Post("/login", s.LoginHTTP)           // front completed
 
 	s.router.Group(func(r chi.Router) {
 		r.Use(JWTmiddleware)
 		r.Route("/admin", func(r chi.Router) {
 			r.Use(AdminOnly)
 			// admin can see all users and do these actions with them
-			r.Route("/users", func(r chi.Router) { // /users
-				r.Get("/", s.GetAllUsersHTTP)    //
-				r.Post("/", s.CreateNewUserHTTP) //
+			r.Route("/users", func(r chi.Router) { // 		// front completed
+				r.Get("/", s.GetAllUsersHTTP)    //			// front completed
+				r.Post("/", s.CreateNewUserHTTP) //			// front completed
 
 				r.Route("/{id}", func(r chi.Router) { //
 					r.Use(s.InjectTargetID)
@@ -128,20 +128,20 @@ func (s *Server) Routes() {
 		r.Route("/me", func(r chi.Router) { //
 			r.Use(s.InjectTargetID)
 
-			r.Get("/", s.GetUserByIdHTTP)                  //
-			r.Patch("/rename", s.RenameUserHTTP)           //
-			r.Patch("/password", s.ChangeUserPasswordHTTP) //
-			r.Delete("/", s.DeleteUserHTTP)
+			r.Get("/", s.GetUserByIdHTTP)                  //  front completed
+			r.Patch("/rename", s.RenameUserHTTP)           //  front completed
+			r.Patch("/password", s.ChangeUserPasswordHTTP) //  front completed
+			r.Delete("/", s.DeleteUserHTTP)                //  front completed
 
-			r.Route("/tasks", func(r chi.Router) { //
-				r.Get("/", s.GetTaskByUserIdHTTP) //
-				r.Post("/", s.CreateNewTaskHTTP)  //
+			r.Route("/tasks", func(r chi.Router) { // front completed
+				r.Get("/", s.GetTaskByUserIdHTTP) // front completed
+				r.Post("/", s.CreateNewTaskHTTP)  // front completed
 
 				r.Route("/{id}", func(r chi.Router) { //
-					r.Delete("/", s.DeleteTaskHTTP)                      //
-					r.Patch("/switch", s.SwitchTaskStatusHTTP)           //
-					r.Patch("/title", s.UpdateTaskTitleHTTP)             //
-					r.Patch("/description", s.UpdateTaskDescriptionHTTP) //
+					r.Delete("/", s.DeleteTaskHTTP)                      // front completed
+					r.Patch("/switch", s.SwitchTaskStatusHTTP)           // front completed
+					r.Patch("/title", s.UpdateTaskTitleHTTP)             // front completed
+					r.Patch("/description", s.UpdateTaskDescriptionHTTP) // front completed
 				})
 			})
 		})
