@@ -116,12 +116,14 @@ func (s *Server) CreateNewTaskHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusCreated)
 
-	var response map[string]any = map[string]any{
-		"id":     taskId,
-		"status": "Task successfully created",
+	taskGotten, err := s.taskSvc.GetTaskByItsId(ctx, taskId, claims.UserID, claims.Role)
+	if err != nil {
+		log.Println("Error getting task by id: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	err = EncodeJSONhelper(w, response)
+	err = EncodeJSONhelper(w, taskGotten)
 	if err != nil {
 		log.Println("Error encoding JSON: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -202,13 +204,15 @@ func (s *Server) UpdateTaskTitleHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := map[string]any{
-		"id":     idInt,
-		"status": "Task's title successfully updated",
+	task, err := s.taskSvc.GetTaskByItsId(ctx, idInt, claims.UserID, claims.Role)
+	if err != nil {
+		log.Println("Error getting task by id: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	err = EncodeJSONhelper(w, response)
+	err = EncodeJSONhelper(w, task)
 	if err != nil {
 		log.Println("Error encoding JSON: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -255,13 +259,15 @@ func (s *Server) UpdateTaskDescriptionHTTP(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	response := map[string]any{
-		"id":     idInt,
-		"status": "Task's description successfully updated",
+	task, err := s.taskSvc.GetTaskByItsId(ctx, idInt, claims.UserID, claims.Role)
+	if err != nil {
+		log.Println("Error getting task by id: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	err = EncodeJSONhelper(w, response)
+	err = EncodeJSONhelper(w, task)
 	if err != nil {
 		log.Println("Error encoding JSON: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -296,13 +302,15 @@ func (s *Server) SwitchTaskStatusHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := map[string]any{
-		"id":     idInt,
-		"status": "Task's status successfully switched",
+	task, err := s.taskSvc.GetTaskByItsId(ctx, idInt, claims.UserID, claims.Role)
+	if err != nil {
+		log.Println("Error getting task by id: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	err = EncodeJSONhelper(w, response)
+	err = EncodeJSONhelper(w, task)
 	if err != nil {
 		log.Println("Error encoding JSON: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
