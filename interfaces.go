@@ -25,4 +25,5 @@ type TaskRepository interface {
 	UpdateTitle(ctx context.Context, newTitle string, id int, actorId int, actorRole string) error
 	UpdateDescription(ctx context.Context, newDescription string, id int, actorId int, actorRole string) error
 	SwitchTaskStatus(ctx context.Context, id int, actorId int, actorRole string) error
+	GetTaskById(ctx context.Context, taskId int, actorId int, actorRole string) (*Task, error)
 }
