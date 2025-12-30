@@ -136,13 +136,15 @@ func (s *Server) RenameUserHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := map[string]any{
-		"id":     targetUserId,
-		"status": "User successfully renamed",
+	user, err := s.userSvc.GetUserById(ctx, targetUserId, claims.UserID, claims.Role)
+	if err != nil {
+		log.Println("Error getting user by id: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	err = EncodeJSONhelper(w, response)
+	err = EncodeJSONhelper(w, user)
 	if err != nil {
 		log.Println("Error encoding JSON: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -188,15 +190,17 @@ func (s *Server) ChangeUserPasswordHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	user, err := s.userSvc.GetUserById(ctx, targetUserId, claims.UserID, claims.Role)
+	if err != nil {
+		log.Println("Error getting user by id: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 
-	response := map[string]any{
-		"id":     targetUserId,
-		"status": "Password successfully changed",
-	}
-
-	err = EncodeJSONhelper(w, response)
+	err = EncodeJSONhelper(w, user)
 	if err != nil {
 		log.Println("Error encoding JSON: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -266,13 +270,15 @@ func (s *Server) UpdateRoleHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := map[string]any{
-		"id":     targetId,
-		"status": "User role successfully updated",
+	user, err := s.userSvc.GetUserById(ctx, targetId, claims.UserID, claims.Role)
+	if err != nil {
+		log.Println("Error getting user by id: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	err = EncodeJSONhelper(w, response)
+	err = EncodeJSONhelper(w, user)
 	if err != nil {
 		log.Println("Error encoding JSON: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
