@@ -20,16 +20,7 @@ func (ts *TaskService) GetTaskById(ctx context.Context, id int, actorId int, act
 	if id < 1 {
 		return nil, ErrIdMustBeGtZero
 	}
-	tasks, err := ts.repo.GetByUserId(ctx, id, actorId, actorRole)
-	if err != nil {
-		return nil, err
-	}
-
-	if tasks == nil {
-		return nil, ErrNoTasks
-	}
-
-	return tasks, err
+	return ts.repo.GetByUserId(ctx, id, actorId, actorRole)
 }
 
 func (ts *TaskService) CreateNewTask(ctx context.Context, userId int, title string, description string) (int, error) {
