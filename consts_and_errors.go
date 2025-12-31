@@ -7,7 +7,7 @@ import "errors"
 
 const (
 	DB_URL_KEY = "DB_URL" // Key for DB_URL env var, value is being set in database.env
-	ADMIN      = "admin"  // Admin role
+	ADMIN      = "admin"  // AdminUsers role
 	USER       = "user"   // User role
 )
 
@@ -19,8 +19,6 @@ var (
 	ErrOldPasswordIsWrong    = errors.New("old password is incorrect")                               // When the old password is incorrect
 	ErrNewPasswordIsSame     = errors.New("new password must be different from old password")        // When the new password is the same as the old password
 	ErrUserNotFound          = errors.New("user not found")                                          // When user with this id does not exist
-	ErrNoUsers               = errors.New("no users found")                                          // When no users exist
-	ErrNoTasks               = errors.New("no tasks found")                                          // When no tasks exist
 	ErrEmptyTitle            = errors.New("title must be not empty")                                 // When a title is empty
 	ErrNoUserWithThisId      = errors.New("user with this id does not exist")                        // When user with this id does not exist
 	ErrTaskDescNotUpdated    = errors.New("task's description was not updated")                      // when description was not updated due to a 'no rows affected' error
