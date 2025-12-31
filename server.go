@@ -69,7 +69,7 @@ func NewServer(userSvc *UserService, taskSvc *TaskService) *Server {
 	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{allowedOrigins, "http://127.0.0.1:5173"},
+		AllowedOrigins:   []string{allowedOrigins, "http://127.0.0.1:5173", "http://localhost:5173"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		AllowCredentials: true,
@@ -103,24 +103,24 @@ func (s *Server) Routes() {
 
 				r.Route("/{id}", func(r chi.Router) { //
 					r.Use(s.InjectTargetID)
-					r.Get("/", s.GetUserByIdHTTP)                  //
-					r.Patch("/rename", s.RenameUserHTTP)           //
-					r.Patch("/password", s.ChangeUserPasswordHTTP) //
-					r.Patch("/role", s.UpdateRoleHTTP)             //
-					r.Delete("/", s.DeleteUserHTTP)                //
+					r.Get("/", s.GetUserByIdHTTP)                  // front completed
+					r.Patch("/rename", s.RenameUserHTTP)           // front completed
+					r.Patch("/password", s.ChangeUserPasswordHTTP) // front completed
+					r.Patch("/role", s.UpdateRoleHTTP)             // front completed
+					r.Delete("/", s.DeleteUserHTTP)                // front completed
 
-					r.Get("/tasks", s.GetTaskByUserIdHTTP) // получить таски данного пользователя //
-					r.Post("/tasks", s.CreateNewTaskHTTP)  // создать таск данному пользователю   //
+					r.Get("/tasks", s.GetTaskByUserIdHTTP) // получить таски данного пользователя // front completed
+					r.Post("/tasks", s.CreateNewTaskHTTP)  // создать таск данному пользователю   // front completed
 				})
 			})
 			// admin can see all tasks and do these actions with them, as well as with users
-			r.Route("/tasks", func(r chi.Router) { //
-				r.Get("/", s.GetAllTasksHTTP)         //
-				r.Route("/{id}", func(r chi.Router) { //
-					r.Delete("/", s.DeleteTaskHTTP)                      //
-					r.Patch("/title", s.UpdateTaskTitleHTTP)             //
-					r.Patch("/description", s.UpdateTaskDescriptionHTTP) //
-					r.Patch("/switch", s.SwitchTaskStatusHTTP)           //
+			r.Route("/tasks", func(r chi.Router) { // front completed
+				r.Get("/", s.GetAllTasksHTTP)         // front completed
+				r.Route("/{id}", func(r chi.Router) { // front completed
+					r.Delete("/", s.DeleteTaskHTTP)                      // front completed
+					r.Patch("/title", s.UpdateTaskTitleHTTP)             // front completed
+					r.Patch("/description", s.UpdateTaskDescriptionHTTP) // front completed
+					r.Patch("/switch", s.SwitchTaskStatusHTTP)           // front completed
 				})
 			})
 		})
