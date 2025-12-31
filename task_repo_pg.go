@@ -41,8 +41,8 @@ func (tr *TaskPgRepository) GetAll(ctx context.Context) ([]Task, error) {
 		tasks = append(tasks, t)
 	}
 
-	if tasks == nil {
-		return nil, ErrNoTasks
+	if tasks == nil || len(tasks) == 0 {
+		return []Task{}, nil
 	}
 
 	return tasks, nil
@@ -77,7 +77,7 @@ func (tr *TaskPgRepository) GetByUserId(ctx context.Context, id int, actorID int
 	}
 
 	if tasks == nil || len(tasks) == 0 {
-		return nil, ErrNoTasks
+		return []Task{}, nil
 	}
 
 	return tasks, nil
