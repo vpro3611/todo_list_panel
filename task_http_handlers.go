@@ -39,14 +39,14 @@ func (s *Server) GetTaskByUserIdHTTP(w http.ResponseWriter, r *http.Request) {
 	claims, ok := ctx.Value(userContextKey).(*Claims)
 	if !ok {
 		log.Println("Error getting user id from context")
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		http.Error(w, "--Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	targetId, ok := ctx.Value(targetIdContextKey).(int)
 	if !ok {
 		log.Println("Error getting target user id from context")
-		http.Error(w, "Unauthorized", http.StatusInternalServerError)
+		http.Error(w, "--Unauthorized", http.StatusInternalServerError)
 		return
 	}
 
