@@ -77,28 +77,14 @@ func (s *Server) CreateNewUserHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	id, err := s.userSvc.CreateNewUser(ctx, user.Name, user.Password)
+	_, err := s.userSvc.CreateNewUser(ctx, user.Name, user.Password)
 	if err != nil {
 		log.Println("Error creating new user: ", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
 	w.WriteHeader(http.StatusCreated)
-
-	response := map[string]any{
-		"id":     id,
-		"status": "User successfully created",
-	}
-
-	err = EncodeJSONhelper(w, response)
-	if err != nil {
-		log.Println("Error encoding JSON: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 }
 
 func (s *Server) RenameUserHTTP(w http.ResponseWriter, r *http.Request) {
