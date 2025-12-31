@@ -34,8 +34,8 @@ func (ur *UserPgRepository) GetAll(ctx context.Context) ([]User, error) {
 		}
 		users = append(users, user)
 	}
-	if users == nil {
-		return nil, ErrNoUsers
+	if users == nil || len(users) == 0 {
+		return []User{}, nil
 	}
 	return users, nil
 }
