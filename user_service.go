@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"strings"
 )
 
 type UserService struct {
@@ -25,10 +26,10 @@ func (uservice *UserService) GetUserById(ctx context.Context, id int, actorId in
 }
 
 func (uservice *UserService) CreateNewUser(ctx context.Context, name string, password string) (int, error) {
-	if len(name) < 1 {
+	if len(strings.TrimSpace(name)) < 1 {
 		return 0, ErrIdMustBeGtZero
 	}
-	if len(password) < 6 {
+	if len(strings.TrimSpace(password)) < 6 {
 		return 0, ErrPasswordMustBeGt6
 	}
 

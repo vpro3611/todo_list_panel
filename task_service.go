@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strings"
 )
 
 type TaskService struct {
@@ -27,13 +28,13 @@ func (ts *TaskService) CreateNewTask(ctx context.Context, userId int, title stri
 	if userId < 1 {
 		return 0, ErrIdMustBeGtZero
 	}
-	if title == "" {
+	if strings.TrimSpace(title) == "" {
 		return 0, ErrEmptyTitle
 	}
 
 	var desc string
 
-	if description == "" {
+	if strings.TrimSpace(description) == "" {
 		desc = "NO DESCRIPTION"
 	} else {
 		desc = description
