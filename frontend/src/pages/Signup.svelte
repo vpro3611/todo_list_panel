@@ -1,33 +1,3 @@
-<!--<script>-->
-<!--    import { signUp } from "../api/http.js"-->
-
-<!--    let username = ""-->
-<!--    let password = ""-->
-<!--    let message = ""-->
-
-<!--    async function submit() {-->
-<!--        message = ""-->
-
-<!--        try {-->
-<!--            await signUp(username, password)-->
-<!--            message = "Account created successfully. Please login."-->
-<!--            username = ""-->
-<!--            password = ""-->
-<!--        } catch (err) {-->
-<!--            message = err.message-->
-<!--        }-->
-<!--    }-->
-<!--</script>-->
-
-<!--<input placeholder="username" bind:value={username} />-->
-<!--<input type="password" placeholder="password" bind:value={password} />-->
-<!--<button on:click={submit}>Sign up</button>-->
-
-<!--{#if message}-->
-<!--    <p>{message}</p>-->
-<!--{/if}-->
-
-
 <script>
     import { signUp } from "../api/http.js"
 

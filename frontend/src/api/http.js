@@ -1,4 +1,4 @@
-const base_link = "http://localhost:8080"
+export const base_link = import.meta.env.VITE_API_URL;
 
 
 async function handleError(res, defaultMessage) {
