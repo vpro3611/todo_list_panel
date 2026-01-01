@@ -112,7 +112,7 @@ func (s *Server) Routes() {
 			})
 			// admin can see all tasks and do these actions with them, as well as with users
 			r.Route("/tasks", func(r chi.Router) { // front completed
-				r.Get("/", s.GetAllTasksHTTP) // front completed
+				r.Get("/", s.GetAllTasksHTTP)         // front completed
 				r.Route("/{id}", func(r chi.Router) { // front completed
 					r.Delete("/", s.DeleteTaskHTTP)                      // front completed
 					r.Patch("/title", s.UpdateTaskTitleHTTP)             // front completed
