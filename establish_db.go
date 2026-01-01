@@ -8,7 +8,7 @@ import (
 )
 
 func EstablishDb(ctx context.Context, timeout time.Duration) (*pgxpool.Pool, error) {
-	dsn := os.Getenv(DB_URL_KEY)
+	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		return nil, ErrDBisNotSet
 	}
