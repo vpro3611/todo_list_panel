@@ -50,8 +50,13 @@ func main() {
 
 	srv := NewServer(userService, taskService)
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	httpServer := http.Server{
-		Addr:    os.Getenv("SERVER_PORT"),
+		Addr:    ":" + port,
 		Handler: srv.router,
 	}
 
@@ -59,7 +64,7 @@ func main() {
 	defer stopServer()
 
 	go func() {
-		log.Println("Server started")
+		log.Println("Server started on port: ", port, "")
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("listen: %s\n", err)
 		}

@@ -7,7 +7,6 @@ import (
 	"github.com/rs/cors"
 	"log"
 	"net/http"
-	"os"
 )
 
 type Server struct {
@@ -66,14 +65,12 @@ func NewServer(userSvc *UserService, taskSvc *TaskService) *Server {
 		router:  chi.NewRouter(),
 	}
 
-	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
-
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{allowedOrigins, "http://127.0.0.1:5173", "http://localhost:5173"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		AllowCredentials: true,
-		Debug:            true,
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		//AllowCredentials: true,
+		Debug: true,
 	})
 
 	s.router.Use(middleware.Logger)
@@ -115,7 +112,7 @@ func (s *Server) Routes() {
 			})
 			// admin can see all tasks and do these actions with them, as well as with users
 			r.Route("/tasks", func(r chi.Router) { // front completed
-				r.Get("/", s.GetAllTasksHTTP)         // front completed
+				r.Get("/", s.GetAllTasksHTTP) // front completed
 				r.Route("/{id}", func(r chi.Router) { // front completed
 					r.Delete("/", s.DeleteTaskHTTP)                      // front completed
 					r.Patch("/title", s.UpdateTaskTitleHTTP)             // front completed
