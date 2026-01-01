@@ -282,6 +282,12 @@
 
 
 <style>
+    html, body {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+
     /* ===== GLOBAL ===== */
     body {
         margin: 0;
@@ -312,9 +318,12 @@
 
     /* ===== FORM ===== */
     .form-row {
+        width: 100%;
         display: grid;
         grid-template-columns: 1fr 1fr auto;
         gap: 12px;
+        box-sizing: border-box;
+        max-width: 100%;
     }
 
     input,
@@ -374,7 +383,7 @@
     }
 
     .users-table thead {
-        background: #0038ef;
+        background: #ffffff;
         color: #ffffff;
     }
 
@@ -391,12 +400,12 @@
     }
 
     .role.admin {
-        background: #fee2e2;
+        background: #cdaaaa;
         color: #991b1b;
     }
 
     .role.user {
-        background: #dbeafe;
+        background: #cdaaaa;
         color: #1e40af;
     }
 
@@ -405,5 +414,32 @@
         color: #22c55e;
         text-align: center;
         margin-bottom: 20px;
+    }
+
+
+    @media (max-width: 640px) {
+        main {
+            padding: 20px 12px 60px;
+        }
+
+        h1 {
+            font-size: 26px;
+            margin-bottom: 24px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-row button {
+            width: 100%;
+        }
+
+
+
+        .card {
+            padding: 18px;
+        }
     }
 </style>
